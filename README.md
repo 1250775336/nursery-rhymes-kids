@@ -12,3 +12,7 @@
 按「经典童谣 / 日常英语 / 认知学习」分组，包含 ABC song、Head Shoulders Knees and Toes、Finger Family、Brown Bear、Mary Had a Little Lamb 等经典曲目。
 
 音频来源：GitHub `yanguihua-cyber/kids-audio-library`，仓库标注为公有领域。
+
+## Play online
+
+https://1250775336.github.io/nursery-rhymes-kids/
