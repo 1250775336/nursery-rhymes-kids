@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>儿歌点唱机 · English Nursery Rhymes</title>
+<style>
+  body {
+    margin: 0;
+    font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #fff9f0;
+    background-image:
+      radial-gradient(circle at 12% 8%, #ffd9c7 0 6%, transparent 6.5%),
+      radial-gradient(circle at 88% 14%, #d7f0df 0 5%, transparent 5.5%),
+      radial-gradient(circle at 75% 72%, #fff0b8 0 7%, transparent 7.5%),
+      radial-gradient(circle at 20% 85%, #dceaff 0 6%, transparent 6.5%);
+    color: #3a2e2a;
+    min-height: 100vh;
+    padding-bottom: 140px;
+  }
+  header { text-align: center; padding: 24px 16px 10px; }
+  h1 { font-size: 30px; margin: 0; letter-spacing: 1px; }
+  .sub { color: #8a756e; margin-top: 8px; font-size: 14px; }
+
+  .tabs { text-align: center; padding: 10px 12px 4px; }
+  .tab {
+    display: inline-block; margin: 4px; padding: 9px 16px;
+    border: 2px solid #eee0d4; border-radius: 999px;
+    font-size: 15px; font-weight: bold; cursor: pointer; color: #8a756e;
+    background: #fff;
+  }
+  .tab.active { color: #fff; background: #f28c6b; border-color: #d9714f; }
+
+  main { max-width: 1000px; margin: 0 auto; padding: 12px; }
+  .grid { display: flex; flex-wrap: wrap; justify-content: center; }
+  .card {
+    box-sizing: border-box; width: 170px; margin: 8px;
+    background: #fff; border: 3px solid #f0e4d8; border-radius: 20px;
+    padding: 16px 10px 14px; text-align: center; cursor: pointer;
+    box-shadow: 0 5px 14px rgba(120,90,70,.10);
+    position: relative; overflow: hidden;
+  }
+  .card.playing { border-color: #f28c6b; box-shadow: 0 0 0 5px #ffe0d3; }
+  .card .emoji { font-size: 44px; line-height: 1; display: block; margin-bottom: 10px; }
+  .card .cn { font-size: 16px; font-weight: bold; display: block; }
+  .card .en { font-size: 12px; color: #8a756e; display: block; margin-top: 5px; line-height: 1.25; }
+  .card .num { position: absolute; top: 8px; left: 10px; font-size: 11px; color: #c8b3a6; font-weight: bold; }
+  .card .eq { display: none; position: absolute; top: 8px; right: 10px; font-size: 13px; color: #f28c6b; }
+  .card.playing .eq { display: block; }
+
+  .player {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: #fff; border-top: 3px solid #f0e4d8; padding: 10px 14px 12px;
+    box-shadow: 0 -6px 20px rgba(120,90,70,.12); z-index: 10;
+  }
+  .player-inner { max-width: 1000px; margin: 0 auto; }
+  .row1 { display: flex; align-items: center; }
+  .now { flex: 1; min-width: 0; }
+  .now .t { font-weight: bold; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .now .s { font-size: 12px; color: #8a756e; }
+  .ctrl { display: flex; gap: 8px; align-items: center; }
+  button.b {
+    width: 48px; height: 48px; border-radius: 50%; border: 3px solid #e9d7c8;
+    background: #fff; font-size: 20px; cursor: pointer; line-height: 1;
+  }
+  button.b.main { width: 60px; height: 60px; background: #f28c6b; border-color: #d9714f; color: #fff; font-size: 25px; }
+  .bar { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+  .bar input[type=range] { flex: 1; accent-color: #f28c6b; height: 20px; }
+  .time { font-size: 12px; color: #8a756e; min-width: 40px; }
+  .warn {
+    display: none; margin: 16px auto; max-width: 640px; padding: 14px 16px;
+    background: #fff3cd; border: 2px solid #f0c36b; border-radius: 14px;
+    color: #7a5b12; font-size: 14px; line-height: 1.6;
+  }
+  @media (max-width: 480px) {
+    .grid { justify-content: space-around; }
+    .card { width: 46%; margin: 5px 0; padding: 12px 6px; }
+    .card .emoji { font-size: 36px; }
+    .card .cn { font-size: 14px; }
+    .card .en { font-size: 11px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🎵 儿歌点唱机 🎈</h1>
+  <div class="sub">点一下就能听 · 英文启蒙儿歌 30 首</div>
+</header>
+
+<div class="warn" id="warn"></div>
+<div class="tabs" id="tabs"></div>
+<main><div class="grid" id="grid"></div></main>
+
+<div class="player">
+  <div class="player-inner">
+    <div class="row1">
+      <div class="now">
+        <div class="t" id="nowTitle">选一首儿歌吧 👆</div>
+        <div class="s" id="nowSub">经典童谣 · 磨耳朵</div>
+      </div>
+      <div class="ctrl">
+        <button class="b" id="prevBtn" title="上一首">⏮</button>
+        <button class="b main" id="playBtn" title="播放/暂停">▶</button>
+        <button class="b" id="nextBtn" title="下一首">⏭</button>
+      </div>
+    </div>
+    <div class="bar">
+      <span class="time" id="cur">0:00</span>
+      <input type="range" id="seek" value="0" max="1000">
+      <span class="time" id="dur">0:00</span>
+    </div>
+  </div>
+</div>
+
+<audio id="audio" preload="metadata"></audio>
+
+<script>
+/* 全部使用 ES5 写法，兼容微信内置浏览器 / 老安卓内核 */
+(function () {
+  var CATS = {
+    classic: '🎶 经典童谣',
+    daily:   '💬 日常英语',
+    learn:   '🌈 认知学习'
+  };
+
+  var SONGS = [
+    { f:'1.ABC song mp3.mp3', cn:'ABC 字母歌', en:'ABC Song', emoji:'🔤', c:'classic' },
+    { f:'02 Hickory Dickory Dock.mp3', cn:'滴答滴答钟', en:'Hickory Dickory Dock', emoji:'🕰️', c:'classic' },
+    { f:'03 Jack and Jill.mp3', cn:'杰克与吉尔', en:'Jack and Jill', emoji:'🪣', c:'classic' },
+    { f:'10 Mary Had a Little Lamb.mp3', cn:'玛丽有只小羊羔', en:'Mary Had a Little Lamb', emoji:'🐑', c:'classic' },
+    { f:'14 Little Boy Blue.mp3', cn:'小蓝男孩', en:'Little Boy Blue', emoji:'🎺', c:'classic' },
+    { f:'15.We wish you a Merry Christmas.mp3', cn:'圣诞快乐歌', en:'We Wish You a Merry Christmas', emoji:'🎄', c:'classic' },
+    { f:'3.Head Shoulders Knees and toes.mp3', cn:'头肩膝盖脚趾', en:'Head Shoulders Knees and Toes', emoji:'🧒', c:'classic' },
+    { f:"6.I'm a little teapot.mp3", cn:'我是小茶壶', en:"I'm a Little Teapot", emoji:'🫖', c:'classic' },
+    { f:'9.Brown bear, what do you see.mp3', cn:'棕熊看见了什么', en:'Brown Bear, What Do You See?', emoji:'🐻', c:'classic' },
+    { f:'24.LMASTER2 - HICKORY DICKORY DOCK.mp3', cn:'滴答钟（唱读版）', en:'Hickory Dickory Dock', emoji:'🐭', c:'classic' },
+
+    { f:'4.Hello, how are you mp3.mp3', cn:'你好，你好吗', en:'Hello, How Are You?', emoji:'👋', c:'daily' },
+    { f:'5.How old are you mp3.mp3', cn:'你几岁啦', en:'How Old Are You?', emoji:'🎂', c:'daily' },
+    { f:'7.Make a happy face mp3.mp3', cn:'做个开心脸', en:'Make a Happy Face', emoji:'😀', c:'daily' },
+    { f:'10.Going to the zoo.mp3', cn:'去动物园', en:'Going to the Zoo', emoji:'🦒', c:'daily' },
+    { f:'11.I can hear the bell.mp3', cn:'我听见铃声响', en:'I Can Hear the Bell', emoji:'🔔', c:'daily' },
+    { f:'14.Pet song mp3.mp3', cn:'宠物歌', en:'Pet Song', emoji:'🐶', c:'daily' },
+    { f:'16.What are they wearing.mp3', cn:'他们穿什么', en:'What Are They Wearing?', emoji:'👕', c:'daily' },
+    { f:'17.LMASTER2 - CAN I GO OUTSIDE mp3.mp3', cn:'我能出去玩吗', en:'Can I Go Outside?', emoji:'🚪', c:'daily' },
+    { f:'20.LMASTER2 - SCHOOL FOR YOU AND ME mp3.mp3', cn:'你我的学校', en:'School for You and Me', emoji:'🏫', c:'daily' },
+    { f:'21.LMASTER2 - WHAT ARE YOU DOING mp3.mp3', cn:'你在做什么', en:'What Are You Doing?', emoji:'🏃', c:'daily' },
+    { f:'22.LMASTER2 - WHAT DO YOU WANT TO EAT mp3.mp3', cn:'你想吃什么', en:'What Do You Want to Eat?', emoji:'🍎', c:'daily' },
+    { f:'23.LMASTER2 - WHERE IS MOMMY mp3.mp3', cn:'妈妈在哪里', en:'Where Is Mommy?', emoji:'👩', c:'daily' },
+
+    { f:'2.Finger family mp3.mp3', cn:'手指全家福', en:'Finger Family', emoji:'🖐️', c:'learn' },
+    { f:'8.Rainbow song mp3.mp3', cn:'彩虹歌', en:'Rainbow Song', emoji:'🌈', c:'learn' },
+    { f:'12.I like fruit.mp3', cn:'我喜欢水果', en:'I Like Fruit', emoji:'🍌', c:'learn' },
+    { f:'13.I like yummy noodles.mp3', cn:'美味面条', en:'I Like Yummy Noodles', emoji:'🍜', c:'learn' },
+    { f:'18.LMASTER2 - IN THE SEA mp3.mp3', cn:'在大海里', en:'In the Sea', emoji:'🐳', c:'learn' },
+    { f:'19.LMASTER2 - NUMBER SONG mp3.mp3', cn:'数字歌', en:'Number Song', emoji:'🔢', c:'learn' },
+    { f:'25.LMASTER2 - HOW IS THE WEATHER.mp3', cn:'天气怎么样', en:'How Is the Weather?', emoji:'☀️', c:'learn' },
+    { f:'26.LMASTER2 - SEASONS AND WEATHER mp3.mp3', cn:'四季与天气', en:'Seasons and Weather', emoji:'🍂', c:'learn' }
+  ];
+
+  function $(id) { return document.getElementById(id); }
+  var audio = $('audio');
+  var current = -1;
+  var filter = 'all';
+
+  function showWarn(msg) {
+    var w = $('warn');
+    if (w) { w.innerHTML = msg; w.style.display = 'block'; }
+  }
+
+  function pad2(n) { return n < 10 ? '0' + n : '' + n; }
+
+  function fmt(t) {
+    if (!isFinite(t)) return '0:00';
+    var m = Math.floor(t / 60), s = Math.floor(t % 60);
+    return m + ':' + pad2(s);
+  }
+
+  function visibleList() {
+    var out = [];
+    for (var i = 0; i < SONGS.length; i++) {
+      if (filter === 'all' || SONGS[i].c === filter) {
+        out.push({ s: SONGS[i], i: i });
+      }
+    }
+    return out;
+  }
+
+  function renderTabs() {
+    var box = $('tabs');
+    var keys = ['all'];
+    for (var k in CATS) { if (CATS.hasOwnProperty(k)) keys.push(k); }
+    var html = '';
+    for (var j = 0; j < keys.length; j++) {
+      var nm = keys[j] === 'all' ? '🌟 全部' : CATS[keys[j]];
+      var cls = 'tab' + (keys[j] === filter ? ' active' : '');
+      html += '<button class="' + cls + '" data-k="' + keys[j] + '">' + nm + '</button>';
+    }
+    box.innerHTML = html;
+    var btns = box.getElementsByTagName('button');
+    for (var b = 0; b < btns.length; b++) {
+      btns[b].onclick = function () {
+        filter = this.getAttribute('data-k');
+        renderTabs();
+        renderGrid();
+      };
+    }
+  }
+
+  function renderGrid() {
+    var list = visibleList();
+    var html = '';
+    for (var j = 0; j < list.length; j++) {
+      var s = list[j].s, i = list[j].i;
+      var cls = 'card' + (i === current ? ' playing' : '');
+      html += '<div class="' + cls + '" data-i="' + i + '">' +
+              '<span class="num">' + pad2(i + 1) + '</span>' +
+              '<span class="eq">♪♪♪</span>' +
+              '<span class="emoji">' + s.emoji + '</span>' +
+              '<span class="cn">' + s.cn + '</span>' +
+              '<span class="en">' + s.en + '</span>' +
+              '</div>';
+    }
+    var grid = $('grid');
+    grid.innerHTML = html;
+    var cards = grid.getElementsByTagName('div');
+    for (var c = 0; c < cards.length; c++) {
+      cards[c].onclick = function () { play(parseInt(this.getAttribute('data-i'), 10)); };
+    }
+  }
+
+  function play(i) {
+    if (i < 0 || i >= SONGS.length) return;
+    current = i;
+    var s = SONGS[i];
+    audio.src = 'audio/' + s.f;
+    audio.play();
+    $('nowTitle').textContent = s.emoji + ' ' + s.cn;
+    $('nowSub').textContent = s.en + ' · ' + CATS[s.c].replace(/^\S+\s/, '');
+    $('playBtn').textContent = '⏸';
+    renderGrid();
+  }
+
+  function indexInList(list) {
+    for (var j = 0; j < list.length; j++) {
+      if (list[j].i === current) return j;
+    }
+    return -1;
+  }
+
+  audio.addEventListener('ended', function () {
+    var list = visibleList();
+    var pos = indexInList(list);
+    if (pos >= 0 && pos < list.length - 1) play(list[pos + 1].i);
+    else $('playBtn').textContent = '▶';
+  });
+  audio.addEventListener('timeupdate', function () {
+    $('cur').textContent = fmt(audio.currentTime);
+    $('dur').textContent = fmt(audio.duration);
+    $('seek').value = audio.duration ? Math.round(audio.currentTime / audio.duration * 1000) : 0;
+  });
+  audio.addEventListener('play', function () { $('playBtn').textContent = '⏸'; });
+  audio.addEventListener('pause', function () { $('playBtn').textContent = '▶'; });
+  audio.addEventListener('error', function () {
+    showWarn('⚠️ 音频加载失败。如果你是直接在微信里打开这个 HTML 文件，微信不会把 audio 文件夹一起带过来，所以听不了。解决办法：把整个文件夹发布成在线链接，或把页面发给电脑用浏览器打开。');
+  });
+
+  $('playBtn').onclick = function () {
+    if (current < 0) { play(0); return; }
+    if (audio.paused) audio.play(); else audio.pause();
+  };
+  $('prevBtn').onclick = function () {
+    var list = visibleList();
+    if (!list.length) return;
+    var pos = indexInList(list);
+    if (pos < 0) { play(list[0].i); return; }
+    play(list[(pos - 1 + list.length) % list.length].i);
+  };
+  $('nextBtn').onclick = function () {
+    var list = visibleList();
+    if (!list.length) return;
+    var pos = indexInList(list);
+    if (pos < 0) { play(list[0].i); return; }
+    play(list[(pos + 1) % list.length].i);
+  };
+  $('seek').oninput = function () {
+    if (audio.duration) audio.currentTime = this.value / 1000 * audio.duration;
+  };
+  document.addEventListener('keydown', function (e) {
+    if (e.key === ' ') { e.preventDefault(); $('playBtn').click(); }
+    else if (e.key === 'ArrowRight') $('nextBtn').click();
+    else if (e.key === 'ArrowLeft') $('prevBtn').click();
+  });
+
+  renderTabs();
+  renderGrid();
+
+  if (window.location.protocol === 'file:') {
+    showWarn('💡 电脑本地打开：需保持 audio 文件夹和本文件在同一目录。微信里直接打开本文件无法播放音频，请用在线链接。');
+  }
+})();
+</script>
+</body>
+</html>
